@@ -214,6 +214,9 @@ pub struct Device {
     pub suggested_area: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub configuration_url: Option<String>,
+    /// Identifier for the device this one is connected through, e.g. a hub.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub via_device: Option<(String, String)>,
 }
 
 /// En entity. Felterne svarer til TheHomes entity-register.
@@ -238,6 +241,9 @@ pub struct Entity {
     pub state_class: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub entity_category: Option<String>,
+    /// Slået fra, når den oprettes. Brugeren kan slå den til.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub disabled_by_default: bool,
     /// Faste attributter, f.eks. `supported_features` eller `options`.
     #[serde(skip_serializing_if = "Value::is_null")]
     pub capabilities: Value,
@@ -273,6 +279,15 @@ impl Entity {
     }
     pub fn capabilities(mut self, c: Value) -> Self {
         self.capabilities = c;
+        self
+    }
+    /// `diagnostic` eller `config`.
+    pub fn category(mut self, c: &str) -> Self {
+        self.entity_category = Some(c.into());
+        self
+    }
+    pub fn disabled_by_default(mut self) -> Self {
+        self.disabled_by_default = true;
         self
     }
 }
