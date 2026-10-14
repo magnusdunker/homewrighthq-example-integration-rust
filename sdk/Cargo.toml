@@ -1,0 +1,13 @@
+[package]
+name = "thehome-plugin"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "SDK til eksterne TheHome-integrationer: JSON-RPC over stdin/stdout"
+publish = false
+
+[dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-std", "io-util", "sync", "time"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+async-trait = "0.1"
