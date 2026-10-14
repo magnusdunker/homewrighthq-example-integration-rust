@@ -436,10 +436,19 @@ pub fn log(level: &str, message: impl std::fmt::Display) {
 /// Kør integrationen, indtil TheHome lukker stdin eller beder om at stoppe.
 pub fn run<I: Integration>(integration: I) {
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().expect("tokio runtime");
-    rt.block_on(serve(Arc::new(integration)));
+    rt.block_on(serve_io(integration, tokio::io::stdin(), tokio::io::stdout()));
 }
 
-async fn serve<I: Integration>(integration: Arc<I>) {
+/// Som [`run`], men over vilkårlige strømme. Til tests, der spiller TheHome
+/// over et rør (f.eks. `tokio::io::duplex`). Returnerer, når `input` lukkes
+/// eller TheHome sender `shutdown`.
+pub async fn serve_io<I, R, W>(integration: I, input: R, output: W)
+where
+    I: Integration,
+    R: tokio::io::AsyncRead + Unpin + Send + 'static,
+    W: tokio::io::AsyncWrite + Unpin + Send + 'static,
+{
+    let integration = Arc::new(integration);
     let (tx, mut rx) = mpsc::unbounded_channel::<String>();
     let host = Host {
         tx,
@@ -449,7 +458,7 @@ async fn serve<I: Integration>(integration: Arc<I>) {
     };
 
     let writer = tokio::spawn(async move {
-        let mut out = tokio::io::stdout();
+        let mut out = output;
         while let Some(line) = rx.recv().await {
             if out.write_all(line.as_bytes()).await.is_err() || out.write_all(b"\n").await.is_err() || out.flush().await.is_err() {
                 break;
@@ -457,7 +466,7 @@ async fn serve<I: Integration>(integration: Arc<I>) {
         }
     });
 
-    let mut lines = BufReader::new(tokio::io::stdin()).lines();
+    let mut lines = BufReader::new(input).lines();
     while let Ok(Some(line)) = lines.next_line().await {
         let Ok(msg) = serde_json::from_str::<Value>(&line) else {
             log("WARN", format!("ugyldig besked fra TheHome: {line}"));
