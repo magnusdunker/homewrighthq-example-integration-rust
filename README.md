@@ -15,7 +15,7 @@ Desuden har den tjenesten `example_counter.set`, der sætter en tæller til en b
 I TheHome: **Indstillinger → Integrationer → Fra GitHub**. Indsæt
 
 ```
-https://github.com/magnusdunker/thehome-example-integration
+https://github.com/magnusdunker/thehome-example-integration-rust
 ```
 
 og tryk **Installér**. Tilføj derefter **Eksempel-tæller** under **Tilføj integration**.

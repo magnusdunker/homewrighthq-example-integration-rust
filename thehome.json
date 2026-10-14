@@ -4,5 +4,5 @@
   "plugin_api": 1,
   "config_flow": true,
   "iot_class": "calculated",
-  "documentation": "https://github.com/magnusdunker/thehome-example-integration"
+  "documentation": "https://github.com/magnusdunker/thehome-example-integration-rust"
 }
