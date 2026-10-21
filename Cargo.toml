@@ -6,7 +6,7 @@ name = "thehome-example-counter"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "Eksempel på en ekstern integration til TheHome: en tæller"
+description = "Eksempel på en ekstern integration til HomewrightHQ: en tæller"
 publish = false
 
 [[bin]]

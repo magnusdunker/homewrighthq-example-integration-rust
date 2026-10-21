@@ -3,7 +3,7 @@ name = "thehome-plugin"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-description = "SDK til eksterne TheHome-integrationer: JSON-RPC over stdin/stdout"
+description = "SDK til eksterne HomewrightHQ-integrationer: JSON-RPC over stdin/stdout"
 publish = false
 
 [dependencies]

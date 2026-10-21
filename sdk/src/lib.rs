@@ -1,6 +1,6 @@
-//! SDK til eksterne TheHome-integrationer.
+//! SDK til eksterne HomewrightHQ-integrationer.
 //!
-//! En ekstern integration er et selvstændigt program. TheHome starter det og
+//! En ekstern integration er et selvstændigt program. HomewrightHQ starter det og
 //! taler med det over JSON-RPC 2.0 på stdin og stdout, én besked pr. linje.
 //! stderr er integrationens log. Programmet stopper, når stdin lukkes.
 //!
@@ -48,7 +48,7 @@ const HOST_TIMEOUT: Duration = Duration::from_secs(30);
 // ---------------------------------------------------------------------------
 // fejl
 
-/// En fejl til TheHome. `kind` afgør, hvad TheHome gør:
+/// En fejl til HomewrightHQ. `kind` afgør, hvad HomewrightHQ gør:
 /// `not_ready` prøver igen senere, `auth_failed` beder brugeren logge ind
 /// igen, `invalid_argument`, `not_supported`, `unavailable` og `not_found`
 /// vises ved tjenestekald, og `failed` er alt andet.
@@ -95,7 +95,7 @@ fn to_wire(e: &Error) -> Value {
 }
 
 // ---------------------------------------------------------------------------
-// data fra TheHome
+// data fra HomewrightHQ
 
 /// En opsætning af integrationen (en "config entry").
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -188,7 +188,7 @@ impl FlowReply {
         self
     }
 
-    /// Sæt et unikt id. TheHome afbryder med `already_configured`, hvis en
+    /// Sæt et unikt id. HomewrightHQ afbryder med `already_configured`, hvis en
     /// anden opsætning har det.
     pub fn with_unique_id(mut self, id: impl Into<String>) -> Self {
         self.unique_id = Some(id.into());
@@ -196,7 +196,7 @@ impl FlowReply {
     }
 }
 
-/// En enhed. Felterne svarer til TheHomes enhedsregister.
+/// En enhed. Felterne svarer til HomewrightHQ's enhedsregister.
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct Device {
     /// F.eks. `[("mit_domæne", "serienummer")]`. Holder enheden stabil.
@@ -219,7 +219,7 @@ pub struct Device {
     pub via_device: Option<(String, String)>,
 }
 
-/// En entity. Felterne svarer til TheHomes entity-register.
+/// En entity. Felterne svarer til HomewrightHQ's entity-register.
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct Entity {
     /// `sensor`, `switch`, `light`, `button`, `climate` ...
@@ -312,7 +312,7 @@ pub trait Integration: Send + Sync + 'static {
     /// Sæt en opsætning op: registrér enheder og entities, start arbejde.
     async fn setup_entry(&self, host: &Host, entry: Entry) -> Result<(), Error>;
 
-    /// Stop arbejdet for en opsætning. TheHome fjerner selv dens tilstande.
+    /// Stop arbejdet for en opsætning. HomewrightHQ fjerner selv dens tilstande.
     async fn unload_entry(&self, _host: &Host, _entry_id: &str) -> Result<(), Error> {
         Ok(())
     }
@@ -340,11 +340,11 @@ pub trait Integration: Send + Sync + 'static {
 }
 
 // ---------------------------------------------------------------------------
-// forbindelsen til TheHome
+// forbindelsen til HomewrightHQ
 
 type Pending = Arc<Mutex<HashMap<u64, oneshot::Sender<Result<Value, Error>>>>>;
 
-/// Forbindelsen til TheHome. Billig at klone.
+/// Forbindelsen til HomewrightHQ. Billig at klone.
 #[derive(Clone)]
 pub struct Host {
     tx: mpsc::UnboundedSender<String>,
@@ -359,21 +359,21 @@ impl Host {
         self.data_dir.lock().unwrap().clone()
     }
 
-    /// Kald en metode i TheHome og vent på svaret.
+    /// Kald en metode i HomewrightHQ og vent på svaret.
     pub async fn request(&self, method: &str, params: Value) -> Result<Value, Error> {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
         let (tx, rx) = oneshot::channel();
         self.pending.lock().unwrap().insert(id, tx);
         let msg = json!({ "jsonrpc": "2.0", "id": id, "method": method, "params": params });
         if self.tx.send(msg.to_string()).is_err() {
-            return Err(Error::not_ready("forbindelsen til TheHome er lukket"));
+            return Err(Error::not_ready("forbindelsen til HomewrightHQ er lukket"));
         }
         match tokio::time::timeout(HOST_TIMEOUT, rx).await {
             Ok(Ok(r)) => r,
-            Ok(Err(_)) => Err(Error::not_ready("forbindelsen til TheHome er lukket")),
+            Ok(Err(_)) => Err(Error::not_ready("forbindelsen til HomewrightHQ er lukket")),
             Err(_) => {
                 self.pending.lock().unwrap().remove(&id);
-                Err(Error::failed(format!("{method}: TheHome svarede ikke")))
+                Err(Error::failed(format!("{method}: HomewrightHQ svarede ikke")))
             }
         }
     }
@@ -384,7 +384,7 @@ impl Host {
         v.get("id").and_then(Value::as_str).map(String::from).ok_or_else(|| Error::failed("intet enheds-id"))
     }
 
-    /// Tilføj en entity. Med `handler` sender TheHome dens tjenestekald til
+    /// Tilføj en entity. Med `handler` sender HomewrightHQ dens tjenestekald til
     /// [`Integration::entity_service`]. Returnerer entity_id, eller `None`
     /// hvis brugeren har slået den fra.
     pub async fn add_entity(&self, entry_id: &str, entity: Entity, handler: bool) -> Result<Option<String>, Error> {
@@ -411,7 +411,7 @@ impl Host {
         self.request("service/register", json!({ "entry_id": entry_id, "service": service, "description": description })).await.map(|_| ())
     }
 
-    /// Kald en tjeneste i TheHome, f.eks. `light.turn_on`.
+    /// Kald en tjeneste i HomewrightHQ, f.eks. `light.turn_on`.
     pub async fn call_service(&self, domain: &str, service: &str, data: Value) -> Result<Value, Error> {
         self.request("hub/call_service", json!({ "domain": domain, "service": service, "data": data })).await
     }
@@ -440,7 +440,7 @@ impl Host {
     }
 }
 
-/// Skriv til TheHomes log. `level`: `ERROR`, `WARN`, `INFO` eller `DEBUG`.
+/// Skriv til HomewrightHQ's log. `level`: `ERROR`, `WARN`, `INFO` eller `DEBUG`.
 pub fn log(level: &str, message: impl std::fmt::Display) {
     eprintln!("{level} {message}");
 }
@@ -448,15 +448,15 @@ pub fn log(level: &str, message: impl std::fmt::Display) {
 // ---------------------------------------------------------------------------
 // løkken
 
-/// Kør integrationen, indtil TheHome lukker stdin eller beder om at stoppe.
+/// Kør integrationen, indtil HomewrightHQ lukker stdin eller beder om at stoppe.
 pub fn run<I: Integration>(integration: I) {
     let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build().expect("tokio runtime");
     rt.block_on(serve_io(integration, tokio::io::stdin(), tokio::io::stdout()));
 }
 
-/// Som [`run`], men over vilkårlige strømme. Til tests, der spiller TheHome
+/// Som [`run`], men over vilkårlige strømme. Til tests, der spiller HomewrightHQ
 /// over et rør (f.eks. `tokio::io::duplex`). Returnerer, når `input` lukkes
-/// eller TheHome sender `shutdown`.
+/// eller HomewrightHQ sender `shutdown`.
 pub async fn serve_io<I, R, W>(integration: I, input: R, output: W)
 where
     I: Integration,
@@ -484,7 +484,7 @@ where
     let mut lines = BufReader::new(input).lines();
     while let Ok(Some(line)) = lines.next_line().await {
         let Ok(msg) = serde_json::from_str::<Value>(&line) else {
-            log("WARN", format!("ugyldig besked fra TheHome: {line}"));
+            log("WARN", format!("ugyldig besked fra HomewrightHQ: {line}"));
             continue;
         };
         let Some(method) = msg.get("method").and_then(Value::as_str).map(String::from) else {

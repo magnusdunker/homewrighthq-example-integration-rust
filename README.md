@@ -1,6 +1,6 @@
-# Eksempel-tæller til TheHome
+# Eksempel-tæller til HomewrightHQ
 
-En lille ekstern integration til [TheHome](https://github.com/magnusdunker/thehome). Den er til at afprøve, hvordan integrationer installeres fra GitHub, og som udgangspunkt for at skrive sin egen.
+En lille ekstern integration til [HomewrightHQ](https://github.com/magnusdunker/homewrighthq). Den er til at afprøve, hvordan integrationer installeres fra GitHub, og som udgangspunkt for at skrive sin egen.
 
 Hver opsætning giver en enhed med:
 
@@ -12,17 +12,17 @@ Desuden har den tjenesten `example_counter.set`, der sætter en tæller til en b
 
 ## Installation
 
-I TheHome: **Indstillinger → Integrationer → Fra GitHub**. Indsæt
+I HomewrightHQ: **Indstillinger → Integrationer → Fra GitHub**. Indsæt
 
 ```
-https://github.com/magnusdunker/thehome-example-integration-rust
+https://github.com/magnusdunker/homewrighthq-example-integration-rust
 ```
 
 og tryk **Installér**. Tilføj derefter **Eksempel-tæller** under **Tilføj integration**.
 
 ## Sådan virker det
 
-En ekstern integration er et selvstændigt program. TheHome starter det og taler med det over JSON-RPC på stdin og stdout. Protokollen er beskrevet i TheHomes [docs/custom-integrations.md](https://github.com/magnusdunker/thehome/blob/main/docs/custom-integrations.md), så integrationen kan skrives i et hvilket som helst sprog.
+En ekstern integration er et selvstændigt program. HomewrightHQ starter det og taler med det over JSON-RPC på stdin og stdout. Protokollen er beskrevet i HomewrightHQ's [docs/custom-integrations.md](https://github.com/magnusdunker/homewrighthq/blob/main/docs/custom-integrations.md), så integrationen kan skrives i et hvilket som helst sprog.
 
 Repoet indeholder:
 
@@ -38,9 +38,9 @@ Repoet indeholder:
 3. Implementér `Integration` fra `thehome-plugin`. Kun `setup_entry` er påkrævet.
 4. Push et tag, f.eks. `git tag v0.1.0 && git push --tags`. Workflowet bygger til Windows, Linux (x86_64 og arm64) og macOS og opretter releasen.
 
-TheHome henter altid den nyeste release. Binærerne skal hedde `<domæne>-<target>`, f.eks. `example_counter-aarch64-unknown-linux-musl`.
+HomewrightHQ henter altid den nyeste release. Binærerne skal hedde `<domæne>-<target>`, f.eks. `example_counter-aarch64-unknown-linux-musl`.
 
-Prøv lokalt med `cargo build`. Programmet venter på beskeder fra TheHome på stdin, så det gør ingenting, når det startes alene.
+Prøv lokalt med `cargo build`. Programmet venter på beskeder fra HomewrightHQ på stdin, så det gør ingenting, når det startes alene.
 
 ## Licens
 

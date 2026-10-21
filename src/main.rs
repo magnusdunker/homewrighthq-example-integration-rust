@@ -1,4 +1,4 @@
-//! Eksempel-tæller: en ekstern integration til TheHome.
+//! Eksempel-tæller: en ekstern integration til HomewrightHQ.
 //!
 //! Hver opsætning får en enhed med
 //! - en sensor, der tæller én op med et fast interval,
@@ -54,7 +54,7 @@ fn options_schema(interval: u64) -> Value {
 }
 
 /// `example_counter.set` gælder alle opsætninger; målet afgør hvilken.
-/// TheHome knytter tjenesten til den opsætning, der registrerede den.
+/// HomewrightHQ knytter tjenesten til den opsætning, der registrerede den.
 async fn register_set_service(host: &Host, entry_id: &str) -> Result<(), Error> {
     host.register_service(
         entry_id,
@@ -93,7 +93,7 @@ impl Example {
         }
     }
 
-    /// Send tællerens og kontaktens tilstand til TheHome.
+    /// Send tællerens og kontaktens tilstand til HomewrightHQ.
     async fn publish(&self, host: &Host, entry_id: &str) -> Result<(), Error> {
         let (count, running, count_id, running_id) = {
             let c = self.counters.lock().unwrap();
@@ -167,7 +167,7 @@ impl Integration for Example {
             .register_device(&id, Device {
                 identifiers: vec![(DOMAIN.into(), id.clone())],
                 name: name.clone(),
-                manufacturer: Some("TheHome".into()),
+                manufacturer: Some("HomewrightHQ".into()),
                 model: Some("Eksempel-tæller".into()),
                 sw_version: Some(env!("CARGO_PKG_VERSION").into()),
                 ..Default::default()
@@ -236,7 +236,7 @@ impl Integration for Example {
             }
             c.keys().next().cloned()
         };
-        // TheHome fjerner tjenesten med opsætningen; de andre skal stadig have den
+        // HomewrightHQ fjerner tjenesten med opsætningen; de andre skal stadig have den
         if let Some(other) = other {
             register_set_service(host, &other).await?;
         }
